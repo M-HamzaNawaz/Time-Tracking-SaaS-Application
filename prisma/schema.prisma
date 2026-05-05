@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         String     @id @default(cuid())
+  name       String?
+  email      String     @unique
+  password   String
+  role       String     @default("employee") // "admin" or "employee"
+  isVerified Boolean    @default(false)
+  createdAt  DateTime   @default(now())
+  timeLogs   TimeLog[]
+}
+
+model Invitation {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  token     String   @unique
+  role      String   @default("employee")
+  status    String   @default("pending") // "pending" or "accepted"
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model TimeLog {
+  id          String   @id @default(cuid())
+  userId      String
+  projectName String
+  startTime   DateTime
+  endTime     DateTime?
+  duration    Int?     // duration in seconds
+  note        String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
