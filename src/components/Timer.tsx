@@ -28,12 +28,39 @@ export default function Timer({ onStop }: { onStop?: () => void }) {
     setProjectName,
     setNote,
     startTimer,
+    resumeTimer,
     stopTimer,
     getDuration,
   } = useTimerStore();
 
   const [displayTime, setDisplayTime] = useState(getDuration());
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // The server is the source of truth for a running timer: a session may have
+  // been started on another device, or local state may be stale.
+  useEffect(() => {
+    const syncWithServer = async () => {
+      try {
+        const res = await fetch("/api/time/active");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.active) {
+          resumeTimer(
+            data.active.id,
+            new Date(data.active.startTime).getTime(),
+            data.active.projectName
+          );
+        } else if (useTimerStore.getState().isTracking) {
+          stopTimer();
+          if (data.autoClosed && onStop) onStop();
+        }
+      } catch (err) {
+        console.error("Failed to sync timer with server:", err);
+      }
+    };
+    syncWithServer();
+  }, [resumeTimer, stopTimer, onStop]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -50,6 +77,7 @@ export default function Timer({ onStop }: { onStop?: () => void }) {
   const handleStart = async () => {
     if (!projectName.trim()) return;
     setLoading(true);
+    setError("");
     try {
       const res = await fetch("/api/time/start", {
         method: "POST",
@@ -59,9 +87,12 @@ export default function Timer({ onStop }: { onStop?: () => void }) {
       const data = await res.json();
       if (res.ok) {
         startTimer(data.logId);
+      } else {
+        setError(data.error || "Failed to start timer");
       }
     } catch (error) {
       console.error("Failed to start timer:", error);
+      setError("Failed to start timer");
     } finally {
       setLoading(false);
     }
@@ -115,6 +146,12 @@ export default function Timer({ onStop }: { onStop?: () => void }) {
             rows={2}
             className="w-full bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-white text-sm rounded-xl py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors duration-300 resize-none"
           />
+        )}
+
+        {error && (
+          <p className="text-red-500 text-sm bg-red-500/10 px-3 py-2 rounded-lg border border-red-500/20 w-full text-center">
+            {error}
+          </p>
         )}
 
         <div className="relative flex items-center justify-center">

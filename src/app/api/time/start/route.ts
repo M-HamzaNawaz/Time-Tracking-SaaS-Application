@@ -13,6 +13,17 @@ export async function POST(req: Request) {
 
     const { projectName } = await req.json();
 
+    const openLog = await prisma.timeLog.findFirst({
+      where: { userId: session.user.id, endTime: null },
+    });
+
+    if (openLog) {
+      return NextResponse.json(
+        { error: "You already have a running timer" },
+        { status: 409 }
+      );
+    }
+
     const timeLog = await prisma.timeLog.create({
       data: {
         userId: session.user.id,

@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import Timer from "@/components/Timer";
 import ActivityList from "@/components/ActivityList";
+import ManualEntryForm from "@/components/ManualEntryForm";
 import Navbar from "@/components/Navbar";
 
 type TimeLog = {
   id: string;
   projectName: string;
   startTime: string;
+  endTime: string | null;
   duration: number | null;
   note: string | null;
   createdAt: string;
@@ -44,6 +46,7 @@ export default function EmployeeDashboard() {
         {/* Left Column: Timer */}
         <div className="w-full lg:w-1/3 flex flex-col">
           <Timer onStop={fetchLogs} />
+          <ManualEntryForm onAdded={fetchLogs} />
         </div>
 
         {/* Right Column: Activity List */}
@@ -54,7 +57,7 @@ export default function EmployeeDashboard() {
               <p className="text-neutral-400 font-medium">Loading your activity...</p>
             </div>
           ) : (
-            <ActivityList logs={logs} />
+            <ActivityList logs={logs} onChanged={fetchLogs} />
           )}
         </div>
       </main>

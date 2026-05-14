@@ -10,6 +10,7 @@ interface TimerState {
   setProjectName: (name: string) => void;
   setNote: (note: string) => void;
   startTimer: (logId: string) => void;
+  resumeTimer: (logId: string, startTimeMs: number, projectName: string) => void;
   stopTimer: () => void;
   getDuration: () => number;
 }
@@ -25,6 +26,8 @@ export const useTimerStore = create<TimerState>()(
       setProjectName: (name) => set({ projectName: name }),
       setNote: (note) => set({ note }),
       startTimer: (logId) => set({ isTracking: true, activeLogId: logId, startTime: Date.now() }),
+      resumeTimer: (logId, startTimeMs, projectName) =>
+        set({ isTracking: true, activeLogId: logId, startTime: startTimeMs, projectName }),
       stopTimer: () => set({ isTracking: false, activeLogId: null, startTime: null, projectName: '', note: '' }),
       getDuration: () => {
         const { isTracking, startTime } = get();
