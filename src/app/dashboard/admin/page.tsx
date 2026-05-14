@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
-import { Send, Users, ShieldAlert, CheckCircle } from "lucide-react";
+import { Send, Users, ShieldAlert, CheckCircle, UserCheck, Clock } from "lucide-react";
 
 export default function AdminDashboard() {
   const [email, setEmail] = useState("");
@@ -10,6 +10,25 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successLink, setSuccessLink] = useState("");
+  const [users, setUsers] = useState<any[]>([]);
+  const [invitations, setInvitations] = useState<any[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch("/api/users");
+        const data = await res.json();
+        if (data.users) setUsers(data.users);
+        if (data.invitations) setInvitations(data.invitations);
+      } catch (err) {
+        console.error("Failed to fetch users", err);
+      } finally {
+        setLoadingData(false);
+      }
+    };
+    fetchUsers();
+  }, [successLink]);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,13 +145,71 @@ export default function AdminDashboard() {
             </form>
           </div>
 
-          {/* Quick Stats or Info could go here in future */}
-          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-8 shadow-xl shadow-black/20 flex flex-col justify-center items-center text-center">
-            <ShieldAlert size={48} className="text-neutral-700 mb-4" />
-            <h3 className="text-xl font-bold text-neutral-300 mb-2">System Overview</h3>
-            <p className="text-neutral-500">
-              Additional administrative tools and team activity monitoring will appear here in future updates.
-            </p>
+          {/* Team Overview */}
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-8 shadow-xl shadow-black/20 flex flex-col">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-indigo-500/10 p-3 rounded-xl text-indigo-400">
+                <Users size={24} />
+              </div>
+              <h2 className="text-xl font-bold text-white">Team Overview</h2>
+            </div>
+
+            {loadingData ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-neutral-500">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mb-4"></div>
+                <p>Loading team data...</p>
+              </div>
+            ) : (
+              <div className="flex-1 overflow-y-auto pr-2 space-y-6">
+                {/* Registered Users */}
+                <div>
+                  <h3 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <UserCheck size={16} /> Active Members
+                  </h3>
+                  {users.length === 0 ? (
+                    <p className="text-sm text-neutral-500">No active members yet.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {users.map((user) => (
+                        <div key={user.id} className="flex justify-between items-center bg-neutral-950 p-3 rounded-xl border border-neutral-800">
+                          <div>
+                            <p className="text-white font-medium text-sm">{user.name || user.email}</p>
+                            <p className="text-neutral-500 text-xs">{user.email}</p>
+                          </div>
+                          <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-neutral-800 text-neutral-300 capitalize">
+                            {user.role}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Pending Invitations */}
+                <div>
+                  <h3 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Clock size={16} /> Pending Invitations
+                  </h3>
+                  {invitations.length === 0 ? (
+                    <p className="text-sm text-neutral-500">No pending invitations.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {invitations.map((invite) => (
+                        <div key={invite.id} className="flex justify-between items-center bg-neutral-950 p-3 rounded-xl border border-neutral-800 border-dashed">
+                          <div>
+                            <p className="text-neutral-300 font-medium text-sm">{invite.email}</p>
+                            <p className="text-amber-500/80 text-xs">Waiting for user to accept</p>
+                          </div>
+                          <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-neutral-800 text-neutral-300 capitalize">
+                            {invite.role}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>

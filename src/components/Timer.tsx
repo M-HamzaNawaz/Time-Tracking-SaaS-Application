@@ -24,7 +24,9 @@ export default function Timer({ onStop }: { onStop?: () => void }) {
     isTracking,
     activeLogId,
     projectName,
+    note,
     setProjectName,
+    setNote,
     startTimer,
     stopTimer,
     getDuration,
@@ -72,7 +74,7 @@ export default function Timer({ onStop }: { onStop?: () => void }) {
       const res = await fetch("/api/time/stop", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ logId: activeLogId }),
+        body: JSON.stringify({ logId: activeLogId, note }),
       });
       if (res.ok) {
         stopTimer();
@@ -104,6 +106,16 @@ export default function Timer({ onStop }: { onStop?: () => void }) {
           disabled={isTracking}
           className="w-full bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-white text-center text-lg rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors duration-300 disabled:opacity-50"
         />
+
+        {isTracking && (
+          <textarea
+            placeholder="Add a note about this session (optional)"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={2}
+            className="w-full bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-white text-sm rounded-xl py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors duration-300 resize-none"
+          />
+        )}
 
         <div className="relative flex items-center justify-center">
           {/* Timer Circle */}

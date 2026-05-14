@@ -4,10 +4,14 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   try {
-    const { token, password } = await req.json();
+    const { token, password, name } = await req.json();
 
     if (!token || !password) {
       return NextResponse.json({ error: "Token and password are required" }, { status: 400 });
+    }
+
+    if (!name || !name.trim()) {
+      return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
     // Find invitation
@@ -35,6 +39,7 @@ export async function POST(req: Request) {
       prisma.user.create({
         data: {
           email: invitation.email,
+          name: name.trim(),
           password: hashedPassword,
           role: invitation.role,
           isVerified: true,

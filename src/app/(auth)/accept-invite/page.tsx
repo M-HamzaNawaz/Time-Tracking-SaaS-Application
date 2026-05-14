@@ -9,6 +9,7 @@ function AcceptInviteForm() {
   const token = searchParams.get("token");
   const router = useRouter();
 
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -28,6 +29,11 @@ function AcceptInviteForm() {
     e.preventDefault();
     setError("");
 
+    if (!name.trim()) {
+      setError("Please enter your name");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -44,7 +50,7 @@ function AcceptInviteForm() {
       const res = await fetch("/api/invite/accept", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({ token, password, name }),
       });
 
       const data = await res.json();
@@ -78,6 +84,22 @@ function AcceptInviteForm() {
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
+      <div>
+        <label className="block text-sm font-medium text-neutral-300">
+          Full Name
+        </label>
+        <div className="mt-1">
+          <input
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Jane Doe"
+            className="appearance-none block w-full px-3 py-2 border border-neutral-700 rounded-xl shadow-sm placeholder-neutral-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-neutral-950 text-white transition-colors"
+          />
+        </div>
+      </div>
+
       <div>
         <label className="block text-sm font-medium text-neutral-300">
           Set Password

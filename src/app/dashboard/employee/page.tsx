@@ -10,6 +10,7 @@ type TimeLog = {
   projectName: string;
   startTime: string;
   duration: number | null;
+  note: string | null;
   createdAt: string;
 };
 

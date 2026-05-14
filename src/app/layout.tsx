@@ -21,7 +21,7 @@ export default function RootLayout({
       <body className={`${inter.className} bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white antialiased transition-colors duration-300`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >

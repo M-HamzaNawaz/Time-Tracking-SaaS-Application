@@ -6,6 +6,7 @@ type TimeLog = {
   projectName: string;
   startTime: string | Date;
   duration: number | null;
+  note: string | null;
   createdAt: string | Date;
 };
 
@@ -48,6 +49,11 @@ export default function ActivityList({ logs }: { logs: TimeLog[] }) {
                 <div className="text-sm text-neutral-500 dark:text-neutral-400 mt-1 flex gap-2 items-center">
                   <span>{format(new Date(log.startTime), "MMM d, yyyy h:mm a")}</span>
                 </div>
+                {log.note && (
+                  <p className="text-sm text-neutral-600 dark:text-neutral-300 mt-2 italic">
+                    {log.note}
+                  </p>
+                )}
               </div>
             </div>
             <div className="text-right">

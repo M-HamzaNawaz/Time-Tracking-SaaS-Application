@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { logId } = await req.json();
+    const { logId, note } = await req.json();
 
     if (!logId) {
       return NextResponse.json({ error: "Log ID is required" }, { status: 400 });
@@ -41,6 +41,7 @@ export async function POST(req: Request) {
       data: {
         endTime,
         duration,
+        note: typeof note === "string" && note.trim() ? note.trim() : null,
       },
     });
 

@@ -1,4 +1,3 @@
-import { NextResponse } from "next-form"; // Wait, it should be next/server
 import { NextResponse as Response } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
@@ -35,9 +34,15 @@ export async function POST(req: Request) {
     const token = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    // Save invitation
-    const invitation = await prisma.invitation.create({
-      data: {
+    // Save invitation (upsert to handle resends)
+    const invitation = await prisma.invitation.upsert({
+      where: { email },
+      update: {
+        token,
+        role: role || "employee",
+        expiresAt,
+      },
+      create: {
         email,
         token,
         role: role || "employee",
@@ -50,18 +55,22 @@ export async function POST(req: Request) {
     console.log(`[INVITE LINK FOR ${email}]:`, inviteLink);
 
     // Send email using Resend
-    if (process.env.RESEND_API_KEY) {
-      await resend.emails.send({
-        from: "TimeTracker <onboarding@resend.dev>",
-        to: email,
-        subject: "You've been invited to TimeTracker",
-        html: `<p>You have been invited to join the TimeTracker application. Click the link below to set up your account:</p><p><a href="${inviteLink}">Accept Invitation</a></p>`,
-      });
+    if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== "re_123456789") {
+      try {
+        await resend.emails.send({
+          from: "TimeTracker <onboarding@resend.dev>",
+          to: email,
+          subject: "You've been invited to TimeTracker",
+          html: `<p>You have been invited to join the TimeTracker application. Click the link below to set up your account:</p><p><a href="${inviteLink}">Accept Invitation</a></p>`,
+        });
+      } catch (emailError) {
+        console.error("Failed to send email via Resend:", emailError);
+      }
     }
 
     return Response.json({ message: "Invitation sent successfully", inviteLink });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Invite error:", error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return Response.json({ error: error.message || "Internal server error" }, { status: 500 });
   }
 }
