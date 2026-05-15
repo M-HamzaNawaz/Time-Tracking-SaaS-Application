@@ -6,25 +6,37 @@ datasource db {
   provider = "postgresql"
 }
 
+model Organization {
+  id          String       @id @default(cuid())
+  name        String
+  createdAt   DateTime     @default(now())
+  users       User[]
+  invitations Invitation[]
+}
+
 model User {
-  id         String     @id @default(cuid())
-  name       String?
-  email      String     @unique
-  password   String
-  role       String     @default("employee") // "admin" or "employee"
-  isVerified Boolean    @default(false)
-  createdAt  DateTime   @default(now())
-  timeLogs   TimeLog[]
+  id             String       @id @default(cuid())
+  name           String?
+  email          String       @unique
+  password       String
+  role           String       @default("employee") // "admin" or "employee"
+  isVerified     Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  timeLogs       TimeLog[]
 }
 
 model Invitation {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  token     String   @unique
-  role      String   @default("employee")
-  status    String   @default("pending") // "pending" or "accepted"
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  id             String       @id @default(cuid())
+  email          String       @unique
+  token          String       @unique
+  role           String       @default("employee")
+  status         String       @default("pending") // "pending" or "accepted"
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 }
 
 model TimeLog {

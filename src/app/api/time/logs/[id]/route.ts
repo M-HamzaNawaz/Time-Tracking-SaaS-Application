@@ -11,13 +11,21 @@ async function authorize(logId: string) {
     return { error: "Unauthorized", status: 401 as const };
   }
 
-  const log = await prisma.timeLog.findUnique({ where: { id: logId } });
+  const log = await prisma.timeLog.findUnique({
+    where: { id: logId },
+    include: { user: { select: { organizationId: true } } },
+  });
 
   if (!log) {
     return { error: "Time log not found", status: 404 as const };
   }
 
-  if (log.userId !== session.user.id && session.user.role !== "admin") {
+  const isOwner = log.userId === session.user.id;
+  const isOrgAdmin =
+    session.user.role === "admin" &&
+    log.user.organizationId === session.user.organizationId;
+
+  if (!isOwner && !isOrgAdmin) {
     return { error: "Forbidden", status: 403 as const };
   }
 

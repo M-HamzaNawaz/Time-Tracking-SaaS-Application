@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Clock } from "lucide-react";
 
 export default function LoginPage() {
@@ -107,6 +108,16 @@ export default function LoginPage() {
               </button>
             </div>
           </form>
+
+          <p className="mt-6 text-center text-sm text-neutral-500 dark:text-neutral-400">
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/signup"
+              className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500"
+            >
+              Create a workspace
+            </Link>
+          </p>
         </div>
       </div>
     </div>

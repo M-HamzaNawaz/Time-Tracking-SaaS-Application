@@ -18,7 +18,9 @@ export async function GET(req: NextRequest) {
     const from = searchParams.get("from");
     const to = searchParams.get("to");
 
-    const where: Prisma.TimeLogWhereInput = {};
+    const where: Prisma.TimeLogWhereInput = {
+      user: { organizationId: session.user.organizationId },
+    };
 
     if (userId) {
       where.userId = userId;

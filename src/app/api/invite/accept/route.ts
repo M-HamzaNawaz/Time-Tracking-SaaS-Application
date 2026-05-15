@@ -43,6 +43,7 @@ export async function POST(req: Request) {
           password: hashedPassword,
           role: invitation.role,
           isVerified: true,
+          organizationId: invitation.organizationId,
         },
       }),
       prisma.invitation.update({

@@ -18,7 +18,10 @@ export async function GET(req: NextRequest) {
     const to = searchParams.get("to");
 
     // Only completed entries contribute to totals.
-    const where: Prisma.TimeLogWhereInput = { duration: { not: null } };
+    const where: Prisma.TimeLogWhereInput = {
+      duration: { not: null },
+      user: { organizationId: session.user.organizationId },
+    };
 
     if (from || to) {
       where.startTime = {};
@@ -39,7 +42,10 @@ export async function GET(req: NextRequest) {
         _sum: { duration: true },
         _count: { _all: true },
       }),
-      prisma.user.findMany({ select: { id: true, name: true, email: true } }),
+      prisma.user.findMany({
+        where: { organizationId: session.user.organizationId },
+        select: { id: true, name: true, email: true },
+      }),
     ]);
 
     const userMap = new Map(users.map((u) => [u.id, u]));

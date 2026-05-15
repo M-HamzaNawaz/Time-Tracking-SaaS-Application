@@ -41,12 +41,14 @@ export async function POST(req: Request) {
         token,
         role: role || "employee",
         expiresAt,
+        organizationId: session.user.organizationId,
       },
       create: {
         email,
         token,
         role: role || "employee",
         expiresAt,
+        organizationId: session.user.organizationId,
       },
     });
 

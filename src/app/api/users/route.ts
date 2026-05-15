@@ -11,7 +11,10 @@ export async function GET(req: Request) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const organizationId = session.user.organizationId;
+
     const users = await prisma.user.findMany({
+      where: { organizationId },
       select: {
         id: true,
         name: true,
@@ -23,7 +26,7 @@ export async function GET(req: Request) {
     });
 
     const invitations = await prisma.invitation.findMany({
-      where: { status: "pending" },
+      where: { status: "pending", organizationId },
       select: {
         id: true,
         email: true,

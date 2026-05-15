@@ -12,6 +12,18 @@ async function main() {
   const adminEmail = "admin@example.com"
   const adminPassword = await bcrypt.hash("admin123", 10)
 
+  const existing = await prisma.user.findUnique({ where: { email: adminEmail } })
+
+  let organizationId
+  if (existing) {
+    organizationId = existing.organizationId
+  } else {
+    const org = await prisma.organization.create({
+      data: { name: "Example Organization" },
+    })
+    organizationId = org.id
+  }
+
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
     update: {},
@@ -21,6 +33,7 @@ async function main() {
       password: adminPassword,
       role: "admin",
       isVerified: true,
+      organizationId,
     },
   })
 

@@ -1,0 +1,58 @@
+import { NextResponse } from "next/server";
+import prisma from "@/lib/db";
+import bcrypt from "bcryptjs";
+
+export async function POST(req: Request) {
+  try {
+    const { name, email, password, organizationName } = await req.json();
+
+    if (!name?.trim() || !email?.trim() || !password || !organizationName?.trim()) {
+      return NextResponse.json(
+        { error: "Name, email, password, and organization name are required" },
+        { status: 400 }
+      );
+    }
+
+    if (password.length < 8) {
+      return NextResponse.json(
+        { error: "Password must be at least 8 characters" },
+        { status: 400 }
+      );
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email: email.trim() },
+    });
+
+    if (existingUser) {
+      return NextResponse.json(
+        { error: "An account with this email already exists" },
+        { status: 409 }
+      );
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await prisma.$transaction(async (tx) => {
+      const org = await tx.organization.create({
+        data: { name: organizationName.trim() },
+      });
+
+      await tx.user.create({
+        data: {
+          name: name.trim(),
+          email: email.trim(),
+          password: hashedPassword,
+          role: "admin",
+          isVerified: true,
+          organizationId: org.id,
+        },
+      });
+    });
+
+    return NextResponse.json({ message: "Account created successfully" });
+  } catch (error) {
+    console.error("Signup error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
