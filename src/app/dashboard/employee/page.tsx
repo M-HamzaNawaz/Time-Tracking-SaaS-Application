@@ -16,8 +16,16 @@ type TimeLog = {
   createdAt: string;
 };
 
+type Project = {
+  id: string;
+  name: string;
+  clientName: string | null;
+  archived: boolean;
+};
+
 export default function EmployeeDashboard() {
   const [logs, setLogs] = useState<TimeLog[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(true);
 
   const fetchLogs = async () => {
@@ -34,19 +42,30 @@ export default function EmployeeDashboard() {
     }
   };
 
+  const fetchProjects = async () => {
+    try {
+      const res = await fetch("/api/projects");
+      const data = await res.json();
+      if (data.projects) setProjects(data.projects);
+    } catch (error) {
+      console.error("Failed to fetch projects", error);
+    }
+  };
+
   useEffect(() => {
     fetchLogs();
+    fetchProjects();
   }, []);
 
   return (
     <div className="min-h-screen bg-neutral-950 flex flex-col">
       <Navbar />
-      
+
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col lg:flex-row gap-12">
         {/* Left Column: Timer */}
         <div className="w-full lg:w-1/3 flex flex-col">
-          <Timer onStop={fetchLogs} />
-          <ManualEntryForm onAdded={fetchLogs} />
+          <Timer onStop={fetchLogs} projects={projects} />
+          <ManualEntryForm onAdded={fetchLogs} projects={projects} />
         </div>
 
         {/* Right Column: Activity List */}

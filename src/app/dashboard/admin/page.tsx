@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import TeamActivity from "@/components/TeamActivity";
 import TeamReports from "@/components/TeamReports";
+import ProjectsAdmin from "@/components/ProjectsAdmin";
 import { Send, Users, ShieldAlert, CheckCircle, UserCheck, Clock } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -216,6 +217,7 @@ export default function AdminDashboard() {
         </div>
 
         <div className="mt-8 space-y-8">
+          <ProjectsAdmin />
           <TeamReports />
           <TeamActivity users={users} />
         </div>

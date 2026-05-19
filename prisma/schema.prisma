@@ -12,6 +12,18 @@ model Organization {
   createdAt   DateTime     @default(now())
   users       User[]
   invitations Invitation[]
+  projects    Project[]
+}
+
+model Project {
+  id             String       @id @default(cuid())
+  name           String
+  clientName     String?
+  archived       Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  timeLogs       TimeLog[]
 }
 
 model User {
@@ -40,14 +52,16 @@ model Invitation {
 }
 
 model TimeLog {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
   projectName String
+  projectId   String?
   startTime   DateTime
   endTime     DateTime?
-  duration    Int?     // duration in seconds
+  duration    Int?      // duration in seconds
   note        String?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 }

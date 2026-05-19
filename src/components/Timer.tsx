@@ -2,9 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { useTimerStore } from "@/store/useTimerStore";
+import ProjectSelect from "@/components/ProjectSelect";
 import { Play, Square, Loader2 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+
+type Project = {
+  id: string;
+  name: string;
+  clientName: string | null;
+  archived: boolean;
+};
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -19,7 +27,13 @@ const formatTime = (seconds: number) => {
     .padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 };
 
-export default function Timer({ onStop }: { onStop?: () => void }) {
+export default function Timer({
+  onStop,
+  projects,
+}: {
+  onStop?: () => void;
+  projects: Project[];
+}) {
   const {
     isTracking,
     activeLogId,
@@ -33,6 +47,7 @@ export default function Timer({ onStop }: { onStop?: () => void }) {
     getDuration,
   } = useTimerStore();
 
+  const [selectedProjectId, setSelectedProjectId] = useState("");
   const [displayTime, setDisplayTime] = useState(getDuration());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -75,17 +90,19 @@ export default function Timer({ onStop }: { onStop?: () => void }) {
   }, [isTracking, getDuration]);
 
   const handleStart = async () => {
-    if (!projectName.trim()) return;
+    if (!selectedProjectId) return;
     setLoading(true);
     setError("");
     try {
       const res = await fetch("/api/time/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectName }),
+        body: JSON.stringify({ projectId: selectedProjectId }),
       });
       const data = await res.json();
       if (res.ok) {
+        const picked = projects.find((p) => p.id === selectedProjectId);
+        setProjectName(picked?.name ?? "");
         startTimer(data.logId);
       } else {
         setError(data.error || "Failed to start timer");
@@ -129,14 +146,17 @@ export default function Timer({ onStop }: { onStop?: () => void }) {
       />
 
       <div className="relative z-10 w-full max-w-sm flex flex-col items-center gap-8">
-        <input
-          type="text"
-          placeholder="What are you working on?"
-          value={projectName}
-          onChange={(e) => setProjectName(e.target.value)}
-          disabled={isTracking}
-          className="w-full bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-white text-center text-lg rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors duration-300 disabled:opacity-50"
-        />
+        {isTracking ? (
+          <div className="w-full bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-white text-center text-lg rounded-xl py-3 px-4 truncate">
+            {projectName || "Untitled"}
+          </div>
+        ) : (
+          <ProjectSelect
+            projects={projects}
+            value={selectedProjectId}
+            onChange={setSelectedProjectId}
+          />
+        )}
 
         {isTracking && (
           <textarea
@@ -207,7 +227,7 @@ export default function Timer({ onStop }: { onStop?: () => void }) {
         ) : (
           <button
             onClick={handleStart}
-            disabled={loading || !projectName.trim()}
+            disabled={loading || !selectedProjectId}
             className="group flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-4 rounded-full font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-indigo-600/25 disabled:opacity-50"
           >
             {loading ? (

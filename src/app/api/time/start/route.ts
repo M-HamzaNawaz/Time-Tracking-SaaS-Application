@@ -11,7 +11,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { projectName } = await req.json();
+    const { projectId } = await req.json();
+
+    if (!projectId) {
+      return NextResponse.json({ error: "Project is required" }, { status: 400 });
+    }
+
+    const project = await prisma.project.findUnique({ where: { id: projectId } });
+
+    if (!project || project.organizationId !== session.user.organizationId) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    if (project.archived) {
+      return NextResponse.json(
+        { error: "Cannot track time against an archived project" },
+        { status: 400 }
+      );
+    }
 
     const openLog = await prisma.timeLog.findFirst({
       where: { userId: session.user.id, endTime: null },
@@ -27,7 +44,8 @@ export async function POST(req: Request) {
     const timeLog = await prisma.timeLog.create({
       data: {
         userId: session.user.id,
-        projectName: projectName || "Untitled Project",
+        projectId: project.id,
+        projectName: project.name,
         startTime: new Date(),
       },
     });

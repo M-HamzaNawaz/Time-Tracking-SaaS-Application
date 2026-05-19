@@ -11,10 +11,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { projectName, startTime, endTime, note } = await req.json();
+    const { projectId, startTime, endTime, note } = await req.json();
 
-    if (!projectName || !projectName.trim()) {
-      return NextResponse.json({ error: "Project name is required" }, { status: 400 });
+    if (!projectId) {
+      return NextResponse.json({ error: "Project is required" }, { status: 400 });
+    }
+
+    const project = await prisma.project.findUnique({ where: { id: projectId } });
+
+    if (!project || project.organizationId !== session.user.organizationId) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
     if (!startTime || !endTime) {
@@ -48,7 +54,8 @@ export async function POST(req: Request) {
     const timeLog = await prisma.timeLog.create({
       data: {
         userId: session.user.id,
-        projectName: projectName.trim(),
+        projectId: project.id,
+        projectName: project.name,
         startTime: start,
         endTime: end,
         duration: Math.floor((end.getTime() - start.getTime()) / 1000),

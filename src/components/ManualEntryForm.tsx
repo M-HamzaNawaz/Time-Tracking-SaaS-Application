@@ -2,10 +2,24 @@
 
 import { useState } from "react";
 import { Plus, Loader2, X } from "lucide-react";
+import ProjectSelect from "@/components/ProjectSelect";
 
-export default function ManualEntryForm({ onAdded }: { onAdded?: () => void }) {
+type Project = {
+  id: string;
+  name: string;
+  clientName: string | null;
+  archived: boolean;
+};
+
+export default function ManualEntryForm({
+  onAdded,
+  projects,
+}: {
+  onAdded?: () => void;
+  projects: Project[];
+}) {
   const [open, setOpen] = useState(false);
-  const [projectName, setProjectName] = useState("");
+  const [projectId, setProjectId] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [note, setNote] = useState("");
@@ -13,7 +27,7 @@ export default function ManualEntryForm({ onAdded }: { onAdded?: () => void }) {
   const [error, setError] = useState("");
 
   const reset = () => {
-    setProjectName("");
+    setProjectId("");
     setStartTime("");
     setEndTime("");
     setNote("");
@@ -22,6 +36,10 @@ export default function ManualEntryForm({ onAdded }: { onAdded?: () => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!projectId) {
+      setError("Please select a project");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -29,7 +47,7 @@ export default function ManualEntryForm({ onAdded }: { onAdded?: () => void }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          projectName,
+          projectId,
           startTime: new Date(startTime).toISOString(),
           endTime: new Date(endTime).toISOString(),
           note,
@@ -78,14 +96,7 @@ export default function ManualEntryForm({ onAdded }: { onAdded?: () => void }) {
         </button>
       </div>
 
-      <input
-        type="text"
-        required
-        value={projectName}
-        onChange={(e) => setProjectName(e.target.value)}
-        placeholder="What did you work on?"
-        className="w-full bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-white text-sm rounded-xl py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      />
+      <ProjectSelect projects={projects} value={projectId} onChange={setProjectId} />
 
       <div className="flex flex-col sm:flex-row gap-3">
         <label className="flex-1 text-xs text-neutral-500 dark:text-neutral-400">
