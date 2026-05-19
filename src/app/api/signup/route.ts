@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import { sendEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   try {
@@ -32,22 +34,42 @@ export async function POST(req: Request) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const verificationToken = crypto.randomBytes(32).toString("hex");
 
-    await prisma.$transaction(async (tx) => {
+    const user = await prisma.$transaction(async (tx) => {
       const org = await tx.organization.create({
         data: { name: organizationName.trim() },
       });
 
-      await tx.user.create({
+      const created = await tx.user.create({
         data: {
           name: name.trim(),
           email: email.trim(),
           password: hashedPassword,
           role: "admin",
-          isVerified: true,
+          isVerified: false,
           organizationId: org.id,
         },
       });
+
+      await tx.emailVerification.create({
+        data: {
+          userId: created.id,
+          token: verificationToken,
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        },
+      });
+
+      return created;
+    });
+
+    const verifyLink = `${process.env.NEXTAUTH_URL}/verify-email?token=${verificationToken}`;
+    console.log(`[VERIFY LINK FOR ${user.email}]:`, verifyLink);
+    await sendEmail({
+      to: user.email,
+      subject: "Verify your TimeTracker email",
+      html: `<p>Welcome to TimeTracker! Please confirm your email to finish setting up your account.</p><p><a href="${verifyLink}">Verify email</a></p>`,
+      label: "verify-email",
     });
 
     return NextResponse.json({ message: "Account created successfully" });

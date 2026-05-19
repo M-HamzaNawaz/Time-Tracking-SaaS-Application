@@ -27,16 +27,38 @@ model Project {
 }
 
 model User {
-  id             String       @id @default(cuid())
-  name           String?
-  email          String       @unique
-  password       String
-  role           String       @default("employee") // "admin" or "employee"
-  isVerified     Boolean      @default(false)
-  createdAt      DateTime     @default(now())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  timeLogs       TimeLog[]
+  id                  String              @id @default(cuid())
+  name                String?
+  email               String              @unique
+  password            String
+  role                String              @default("employee") // "admin" or "employee"
+  isVerified          Boolean             @default(false)
+  createdAt           DateTime            @default(now())
+  organizationId      String
+  organization        Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  timeLogs            TimeLog[]
+  passwordResets      PasswordReset[]
+  emailVerifications  EmailVerification[]
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EmailVerification {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Invitation {

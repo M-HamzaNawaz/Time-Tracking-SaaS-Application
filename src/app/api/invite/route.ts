@@ -3,9 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import crypto from "crypto";
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   try {
@@ -56,19 +54,12 @@ export async function POST(req: Request) {
 
     console.log(`[INVITE LINK FOR ${email}]:`, inviteLink);
 
-    // Send email using Resend
-    if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== "re_123456789") {
-      try {
-        await resend.emails.send({
-          from: "TimeTracker <onboarding@resend.dev>",
-          to: email,
-          subject: "You've been invited to TimeTracker",
-          html: `<p>You have been invited to join the TimeTracker application. Click the link below to set up your account:</p><p><a href="${inviteLink}">Accept Invitation</a></p>`,
-        });
-      } catch (emailError) {
-        console.error("Failed to send email via Resend:", emailError);
-      }
-    }
+    await sendEmail({
+      to: email,
+      subject: "You've been invited to TimeTracker",
+      html: `<p>You have been invited to join the TimeTracker application. Click the link below to set up your account:</p><p><a href="${inviteLink}">Accept Invitation</a></p>`,
+      label: "invite",
+    });
 
     return Response.json({ message: "Invitation sent successfully", inviteLink });
   } catch (error: any) {
