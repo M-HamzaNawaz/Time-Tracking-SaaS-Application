@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, Download } from "lucide-react";
 import { formatDuration } from "@/lib/format";
 
 type UserRow = {
@@ -51,13 +51,30 @@ export default function TeamReports() {
     fetchReport();
   }, [fetchReport]);
 
+  const exportUrl = (() => {
+    const params = new URLSearchParams();
+    if (from) params.set("from", new Date(from).toISOString());
+    if (to) params.set("to", new Date(to).toISOString());
+    const qs = params.toString();
+    return `/api/admin/time-logs/export${qs ? `?${qs}` : ""}`;
+  })();
+
   return (
     <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-8 shadow-xl shadow-black/20">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="bg-indigo-500/10 p-3 rounded-xl text-indigo-400">
-          <BarChart3 size={24} />
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="bg-indigo-500/10 p-3 rounded-xl text-indigo-400">
+            <BarChart3 size={24} />
+          </div>
+          <h2 className="text-xl font-bold text-white">Reports</h2>
         </div>
-        <h2 className="text-xl font-bold text-white">Reports</h2>
+        <a
+          href={exportUrl}
+          className="flex items-center gap-1.5 text-sm font-medium text-indigo-400 hover:text-indigo-300 px-3 py-1.5 rounded-lg hover:bg-neutral-800 transition-colors"
+        >
+          <Download size={16} />
+          Export CSV
+        </a>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-6 items-end">

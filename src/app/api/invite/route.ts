@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import crypto from "crypto";
 import { sendEmail } from "@/lib/email";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export async function POST(req: Request) {
   try {
@@ -11,6 +12,14 @@ export async function POST(req: Request) {
 
     if (!session || session.user.role !== "admin") {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rate = checkRateLimit(`invite:${session.user.id}`, 20, 60 * 60 * 1000);
+    if (!rate.ok) {
+      return Response.json(
+        { error: "Too many invitations sent. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(rate.retryAfter) } }
+      );
     }
 
     const { email, role } = await req.json();
